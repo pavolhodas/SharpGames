@@ -29,7 +29,7 @@ fun MenuScreen(navController: NavController) {
     )
 
     MenuButton(
-      onClick = { },
+      onClick = { navController.navigate(Screen.LogicalThinking.route)},
       modifier = Modifier.padding(vertical = 8.dp),
       text = "Logical Thinking",
       buttonColor = Color(0xFFd4d36a)
