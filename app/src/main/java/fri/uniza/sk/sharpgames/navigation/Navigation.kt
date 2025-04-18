@@ -20,8 +20,9 @@ fun Navigation() {
         composable(Screen.Menu.route) {
             MenuScreen(navController)
         }
+
         composable(Screen.PhotographicMemory.route) {
             PhotographicMemoryScreen(navController)
         }
     }
-} 
+}
