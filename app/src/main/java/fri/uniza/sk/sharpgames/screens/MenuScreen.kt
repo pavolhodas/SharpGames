@@ -21,31 +21,38 @@ fun MenuScreen(navController: NavController) {
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center
   ) {
+    Text(
+      text = "Sharp Games",
+      fontSize = 32.sp,
+      fontWeight = FontWeight.Bold,
+      modifier = Modifier.padding(bottom = 32.dp)
+    )
+
     MenuButton(
+      text = "Photographic Memory",
       onClick = { navController.navigate(Screen.PhotographicMemory.route) },
       modifier = Modifier.padding(vertical = 8.dp),
-      text = "Photographic Memory",
       buttonColor = Color(0xFFec8484)
     )
 
     MenuButton(
-      onClick = { navController.navigate(Screen.LogicalThinking.route)},
-      modifier = Modifier.padding(vertical = 8.dp),
       text = "Logical Thinking",
+      onClick = { navController.navigate(Screen.LogicalThinking.route) },
+      modifier = Modifier.padding(vertical = 8.dp),
       buttonColor = Color(0xFFd4d36a)
     )
 
     MenuButton(
-      onClick = { },
-      modifier = Modifier.padding(vertical = 8.dp),
       text = "Reactions",
+      onClick = { navController.navigate(Screen.Reactions.route) },
+      modifier = Modifier.padding(vertical = 8.dp),
       buttonColor = Color(0xFF5c9464)
     )
 
     MenuButton(
+      text = "Abstract Thinking",
       onClick = { },
       modifier = Modifier.padding(vertical = 8.dp),
-      text = "Abstract Thinking",
       buttonColor = Color(0xFF4b638b)
     )
   }

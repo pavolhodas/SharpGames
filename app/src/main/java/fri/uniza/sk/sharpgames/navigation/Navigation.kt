@@ -7,11 +7,13 @@ import androidx.navigation.compose.rememberNavController
 import fri.uniza.sk.sharpgames.screens.MenuScreen
 import fri.uniza.sk.sharpgames.screens.PhotographicMemoryScreen
 import fri.uniza.sk.sharpgames.screens.LogicalThinkingScreen
+import fri.uniza.sk.sharpgames.screens.ReactionsScreen
 
 sealed class Screen(val route: String) {
     object Menu : Screen("menu")
     object PhotographicMemory : Screen("photographic_memory")
     object LogicalThinking : Screen("logical_thinking")
+    object Reactions : Screen("reactions")
 }
 
 @Composable
@@ -29,6 +31,10 @@ fun Navigation() {
 
         composable(Screen.LogicalThinking.route) {
             LogicalThinkingScreen(navController)
+        }
+
+        composable(Screen.Reactions.route) {
+            ReactionsScreen(navController)
         }
     }
 }
