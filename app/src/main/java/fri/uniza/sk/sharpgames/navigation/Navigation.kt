@@ -8,12 +8,14 @@ import fri.uniza.sk.sharpgames.screens.MenuScreen
 import fri.uniza.sk.sharpgames.screens.PhotographicMemoryScreen
 import fri.uniza.sk.sharpgames.screens.LogicalThinkingScreen
 import fri.uniza.sk.sharpgames.screens.ReactionsScreen
+import fri.uniza.sk.sharpgames.screens.AbstractThinkingScreen
 
 sealed class Screen(val route: String) {
     object Menu : Screen("menu")
     object PhotographicMemory : Screen("photographic_memory")
     object LogicalThinking : Screen("logical_thinking")
     object Reactions : Screen("reactions")
+    object AbstractThinking : Screen("abstract_thinking")
 }
 
 @Composable
@@ -35,6 +37,10 @@ fun Navigation() {
 
         composable(Screen.Reactions.route) {
             ReactionsScreen(navController)
+        }
+
+        composable(Screen.AbstractThinking.route) {
+            AbstractThinkingScreen(navController)
         }
     }
 }

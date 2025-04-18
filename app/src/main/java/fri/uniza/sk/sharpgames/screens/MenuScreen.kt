@@ -51,7 +51,7 @@ fun MenuScreen(navController: NavController) {
 
     MenuButton(
       text = "Abstract Thinking",
-      onClick = { },
+      onClick = { navController.navigate(Screen.AbstractThinking.route) },
       modifier = Modifier.padding(vertical = 8.dp),
       buttonColor = Color(0xFF4b638b)
     )
