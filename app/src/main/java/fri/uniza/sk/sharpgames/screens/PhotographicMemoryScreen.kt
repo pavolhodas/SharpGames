@@ -16,7 +16,9 @@ data class PhotographicMemoryState(
     val score: Int = 0,
     val level: Int = 1,
     val isShowingPattern: Boolean = false,
-    val isGameActive: Boolean = false
+    val isGameActive: Boolean = false,
+    val pattern: List<Int> = emptyList(),  // indexy tlačidiel v poradí
+    val playerSequence: List<Int> = emptyList()  // sekvencia, ktorú hráč stlačil
 )
 
 @Composable
@@ -80,6 +82,36 @@ fun PhotographicMemoryScreen(navController: NavController) {
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
+
+                // Grid tlačidiel 3x3
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    for (row in 0..2) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            for (col in 0..2) {
+                                val index = row * 3 + col
+                                Button(
+                                    onClick = { /* Tu bude logika pre stlačenie tlačidla */ },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.secondary
+                                    )
+                                ) {
+                                    // Prázdny obsah tlačidla
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // Spodná časť - prázdny priestor pre budúci obsah
