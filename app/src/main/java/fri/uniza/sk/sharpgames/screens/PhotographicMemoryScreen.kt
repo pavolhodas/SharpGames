@@ -180,7 +180,8 @@ fun PhotographicMemoryScreen(navController: NavController) {
               )
             }
 
-            // Spodná časť - tlačidlo pre navigáciu domov
+          // Spodná časť - tlačidlo pre navigáciu domov
+          if (gameState != GameState.INITIAL) {
             Button(
                 onClick = {
                     navController.navigate("menu") {
@@ -200,6 +201,9 @@ fun PhotographicMemoryScreen(navController: NavController) {
                     fontWeight = FontWeight.Bold
                 )
             }
+          } else {
+            Spacer(modifier = Modifier.height(16.dp))
+          }
         }
     }
   }
