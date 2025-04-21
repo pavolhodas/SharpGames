@@ -1,15 +1,24 @@
 package fri.uniza.sk.sharpgames.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import fri.uniza.sk.sharpgames.game.GameState
 import fri.uniza.sk.sharpgames.ui.components.GameTopBar
+import kotlinx.coroutines.delay
 
 // Stav hry
 data class PhotographicMemoryState(
@@ -19,15 +28,60 @@ data class PhotographicMemoryState(
     val isGameActive: Boolean = false,
     val pattern: List<Int> = emptyList(),  // indexy tlačidiel v poradí
     val playerSequence: List<Int> = emptyList()  // sekvencia, ktorú hráč stlačil
+
 )
 
 @Composable
 fun PhotographicMemoryScreen(navController: NavController) {
     // mutableStateOf- automaticke prekreslovanie pri zmene stavu
     // remember zabrani resetovaniu stavu pri rekompozicii(otocenie obrazovky atd..)
-    var gameState by remember { mutableStateOf(PhotographicMemoryState()) }
+    var gameState by remember { mutableStateOf(GameState.INITIAL) }
+    var score by remember { mutableStateOf(0) }
+    var level by remember { mutableStateOf(1) }
+    var currentHighlightedCell by remember { mutableStateOf<Int?>(null) }
+    var pattern by remember { mutableStateOf(listOf<Int>()) }
+    var playerSelection by remember { mutableStateOf(listOf<Int>()) }
+    var gridSize by remember { mutableStateOf(3) }
+    var currentPatternIndex by remember { mutableStateOf(0) }
+    var startNextRound by remember { mutableStateOf(false)}
 
-    Scaffold(
+
+
+// Handle showing pattern cells one by one
+  LaunchedEffect(key1 = gameState, key2 = currentPatternIndex) {
+    if (gameState == GameState.SHOWING_PATTERN) {
+      if(currentPatternIndex == 0) {
+        delay(1000)
+      }
+      if (currentPatternIndex < pattern.size) {
+        // Show the current cell
+        currentHighlightedCell = pattern[currentPatternIndex]
+        delay(1000) // Show each cell for 1 second
+        currentHighlightedCell = null
+        delay(300) // Short pause between cells
+        currentPatternIndex++
+      } else {
+        // All cells have been shown
+        delay(500) // Short pause before player can select
+        gameState = GameState.PLAYER_TURN
+        currentPatternIndex = 0
+      }
+    }
+  }
+
+  LaunchedEffect(key1 = startNextRound) {
+    if(startNextRound) {
+        delay(1500)
+        playerSelection = listOf()
+        pattern = generatePattern(gridSize * gridSize, level)
+        gameState = GameState.SHOWING_PATTERN
+        startNextRound = false
+        currentPatternIndex = 0
+        currentHighlightedCell = null
+    }
+  }
+
+  Scaffold(
         topBar = {
             GameTopBar(
                 title = "Photographic Memory",
@@ -50,18 +104,16 @@ fun PhotographicMemoryScreen(navController: NavController) {
                     .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Score: ${gameState.score}")
-                Text("Level: ${gameState.level}")
+                Text("Score: ${score}")
+                Text("Level: ${level}")
             }
 
             // Stredná časť - tlačidlo alebo obsah hry
-            if (!gameState.isGameActive) {
+            if (gameState == GameState.INITIAL) {
                 Button(
-                    onClick = { 
-                        gameState = gameState.copy(
-                            isGameActive = true,
-                            isShowingPattern = true
-                        )
+                    onClick = {
+                        gameState = GameState.SHOWING_PATTERN
+                        pattern = generatePattern(gridSize * gridSize, level)
                     },
                     modifier = Modifier
                         .size(width = 200.dp, height = 80.dp),
@@ -75,47 +127,98 @@ fun PhotographicMemoryScreen(navController: NavController) {
                         fontWeight = FontWeight.Bold
                     )
                 }
-            } else {
+            } else if (gameState == GameState.SHOWING_PATTERN) {
                 Text(
-                    text = if (gameState.isShowingPattern) "Memorize the pattern!" else "Repeat the pattern!",
+                    text =  "Memorize the pattern!",
                     modifier = Modifier.padding(vertical = 16.dp),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
+              MemoryGrid(
+                gridSize = gridSize,
+                selectedCells = listOf(),
+                highlightedCell = currentHighlightedCell,
+                onCellClick = {
 
-                // Grid tlačidiel 3x3
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    for (row in 0..2) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            for (col in 0..2) {
-                                val index = row * 3 + col
-                                Button(
-                                    onClick = { /* Tu bude logika pre stlačenie tlačidla */ },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .aspectRatio(1f),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.secondary
-                                    )
-                                ) {
-                                    // Prázdny obsah tlačidla
-                                }
-                            }
-                        }
-                    }
                 }
+              )
+            } else if(gameState == GameState.PLAYER_TURN) {
+              Text(
+                text = "Repeat the sequence",
+                fontSize = 18.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+              )
+              MemoryGrid(
+                gridSize = gridSize,
+                selectedCells = playerSelection,
+                highlightedCell = null,
+                onCellClick = { index ->
+                  if (playerSelection.size < pattern.size) {
+                    playerSelection = playerSelection + index
+
+                    // Check if player has completed their selection
+                    if (playerSelection.size == pattern.size) {
+                      // Compare the lists for equality
+                      val isCorrect = playerSelection == pattern
+                      //message = if (isCorrect) "Correct! Well done!" else "Incorrect. Try again!
+
+                      if (isCorrect) {
+                        score += 10
+                        level++
+                        if (level > 5) {
+                          gridSize = 4
+                        }
+                      }
+
+                      startNextRound = true
+                    }
+                  }
+                },
+              )
             }
 
             // Spodná časť - prázdny priestor pre budúci obsah
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+  }
+
+@Composable
+fun MemoryGrid(
+  gridSize: Int,
+  selectedCells: List<Int>,
+  highlightedCell: Int?,
+  onCellClick: (Int) -> Unit,
+) {
+  LazyVerticalGrid(
+    columns = GridCells.Fixed(gridSize),
+    modifier = Modifier
+      .fillMaxWidth()
+      .aspectRatio(1f)
+      .padding(8.dp)
+  ) {
+    items(gridSize * gridSize) { index ->
+      Box(
+        modifier = Modifier
+          .aspectRatio(1f)
+          .padding(4.dp)
+          .background(
+            when {
+              highlightedCell == index -> Color.Blue
+              selectedCells.contains(index) -> Color.Blue
+              else -> Color.LightGray
+            }
+          )
+          .border(1.dp, Color.DarkGray)
+          .alpha(1f)
+          .clickable { onCellClick(index) }
+      )
+    }
+  }
+}
+
+fun generatePattern(size: Int, level: Int): List<Int> {
+  val count = minOf(level + 2, size) // Increase pattern size with level, but don't exceed grid size
+  val numList = List(size) { it }
+  return numList.shuffled().take(count)
 }
