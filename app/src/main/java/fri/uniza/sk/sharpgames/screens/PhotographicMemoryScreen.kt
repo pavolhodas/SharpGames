@@ -13,12 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import fri.uniza.sk.sharpgames.game.GameState
 import fri.uniza.sk.sharpgames.ui.components.GameTopBar
 import kotlinx.coroutines.delay
+import fri.uniza.sk.sharpgames.ui.theme.RedPhotographicSc
 
 // Stav hry
 data class PhotographicMemoryState(
@@ -44,14 +46,14 @@ fun PhotographicMemoryScreen(navController: NavController) {
     var gridSize by remember { mutableStateOf(3) }
     var currentPatternIndex by remember { mutableStateOf(0) }
     var startNextRound by remember { mutableStateOf(false)}
-
+    var textMessage by remember {mutableStateOf("")}
 
 
 // Handle showing pattern cells one by one
   LaunchedEffect(key1 = gameState, key2 = currentPatternIndex) {
     if (gameState == GameState.SHOWING_PATTERN) {
       if(currentPatternIndex == 0) {
-        delay(1000)
+        delay(500)
       }
       if (currentPatternIndex < pattern.size) {
         // Show the current cell
@@ -62,8 +64,9 @@ fun PhotographicMemoryScreen(navController: NavController) {
         currentPatternIndex++
       } else {
         // All cells have been shown
-        delay(500) // Short pause before player can select
+        delay(300) // Short pause before player can select
         gameState = GameState.PLAYER_TURN
+        textMessage = "Repeat the sequence"
         currentPatternIndex = 0
       }
     }
@@ -75,6 +78,7 @@ fun PhotographicMemoryScreen(navController: NavController) {
         playerSelection = listOf()
         pattern = generatePattern(gridSize * gridSize, level)
         gameState = GameState.SHOWING_PATTERN
+        textMessage = "Memorize the pattern!"
         startNextRound = false
         currentPatternIndex = 0
         currentHighlightedCell = null
@@ -108,6 +112,16 @@ fun PhotographicMemoryScreen(navController: NavController) {
                 Text("Level: ${level}")
             }
 
+            Text(
+                text = textMessage,
+                fontSize = 20.sp,
+                color = if (textMessage.contains("Correct")) Color.Green else Color.Black,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .alpha(1f)
+            )
+
             // Stredná časť - tlačidlo alebo obsah hry
             if (gameState == GameState.INITIAL) {
                 Button(
@@ -128,12 +142,6 @@ fun PhotographicMemoryScreen(navController: NavController) {
                     )
                 }
             } else if (gameState == GameState.SHOWING_PATTERN) {
-                Text(
-                    text =  "Memorize the pattern!",
-                    modifier = Modifier.padding(vertical = 16.dp),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
-                )
               MemoryGrid(
                 gridSize = gridSize,
                 selectedCells = listOf(),
@@ -143,11 +151,6 @@ fun PhotographicMemoryScreen(navController: NavController) {
                 }
               )
             } else if(gameState == GameState.PLAYER_TURN) {
-              Text(
-                text = "Repeat the sequence",
-                fontSize = 18.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
-              )
               MemoryGrid(
                 gridSize = gridSize,
                 selectedCells = playerSelection,
@@ -169,7 +172,7 @@ fun PhotographicMemoryScreen(navController: NavController) {
                           gridSize = 4
                         }
                       }
-
+                      textMessage = if (isCorrect) "Correct! Well done!" else "Incorrect. Try again!"
                       startNextRound = true
                     }
                   }
@@ -177,8 +180,26 @@ fun PhotographicMemoryScreen(navController: NavController) {
               )
             }
 
-            // Spodná časť - prázdny priestor pre budúci obsah
-            Spacer(modifier = Modifier.height(16.dp))
+            // Spodná časť - tlačidlo pre navigáciu domov
+            Button(
+                onClick = {
+                    navController.navigate("menu") {
+                        popUpTo("menu") { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .size(width = 200.dp, height = 50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = RedPhotographicSc
+                )
+            ) {
+                Text(
+                    text = "Back to Menu",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
   }
@@ -204,8 +225,8 @@ fun MemoryGrid(
           .padding(4.dp)
           .background(
             when {
-              highlightedCell == index -> Color.Blue
-              selectedCells.contains(index) -> Color.Blue
+              highlightedCell == index -> RedPhotographicSc
+              selectedCells.contains(index) -> RedPhotographicSc
               else -> Color.LightGray
             }
           )
