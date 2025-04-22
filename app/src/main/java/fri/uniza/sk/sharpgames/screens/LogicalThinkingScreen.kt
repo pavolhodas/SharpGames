@@ -1,21 +1,318 @@
 package fri.uniza.sk.sharpgames.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import fri.uniza.sk.sharpgames.ui.components.GameTopBar
+
+data class Point(val x: Int, val y: Int)
+data class Flow(val color: Color, val path: Path, val points: List<Point>)
 
 @Composable
 fun LogicalThinkingScreen(navController: NavController) {
-    Column(
-        modifier = androidx.compose.ui.Modifier.fillMaxSize()
-    ) {
-        GameTopBar(
-            title = "Logical Thinking",
-            navController = navController
-        )
+    var flows by remember { mutableStateOf(listOf<Flow>()) }
+    var currentFlow by remember { mutableStateOf<Flow?>(null) }
+    var startPoint by remember { mutableStateOf<Point?>(null) }
+    var gameWon by remember { mutableStateOf(false) }
+    
+    // Generate random colored points with guaranteed valid paths
+    val coloredPoints = remember {
+        val colors = listOf(Color.Red, Color.Blue, Color.Green, Color.Yellow, Color.Magenta)
+        val points = mutableListOf<Pair<Point, Color>>()
+        val grid = Array(5) { Array(5) { false } } // false means cell is empty
         
-        // Tu bude obsah hry
+        // Helper function to find all possible paths between two points
+        fun findPossiblePaths(start: Point, end: Point): List<List<Point>> {
+            val paths = mutableListOf<List<Point>>()
+            
+            // Direct path (horizontal or vertical)
+            if (start.x == end.x || start.y == end.y) {
+                val path = mutableListOf<Point>()
+                if (start.x == end.x) {
+                    for (y in minOf(start.y, end.y)..maxOf(start.y, end.y)) {
+                        path.add(Point(start.x, y))
+                    }
+                } else {
+                    for (x in minOf(start.x, end.x)..maxOf(start.x, end.x)) {
+                        path.add(Point(x, start.y))
+                    }
+                }
+                paths.add(path)
+            }
+            
+            // Path with one turn
+            val turnPoints = listOf(
+                Point(start.x, end.y),
+                Point(end.x, start.y)
+            )
+            
+            turnPoints.forEach { turn ->
+                val path = mutableListOf<Point>()
+                // First segment
+                if (start.x == turn.x) {
+                    for (y in minOf(start.y, turn.y)..maxOf(start.y, turn.y)) {
+                        path.add(Point(start.x, y))
+                    }
+                } else {
+                    for (x in minOf(start.x, turn.x)..maxOf(start.x, turn.x)) {
+                        path.add(Point(x, start.y))
+                    }
+                }
+                // Second segment
+                if (turn.x == end.x) {
+                    for (y in minOf(turn.y, end.y)..maxOf(turn.y, end.y)) {
+                        path.add(Point(turn.x, y))
+                    }
+                } else {
+                    for (x in minOf(turn.x, end.x)..maxOf(turn.x, end.x)) {
+                        path.add(Point(x, turn.y))
+                    }
+                }
+                paths.add(path)
+            }
+            
+            return paths
+        }
+        
+        // Helper function to check if path is valid (doesn't cross existing paths)
+        fun isPathValid(path: List<Point>): Boolean {
+            return path.all { point ->
+                !grid[point.y][point.x]
+            }
+        }
+        
+        // Helper function to mark path as used
+        fun markPath(path: List<Point>) {
+            path.forEach { point ->
+                grid[point.y][point.x] = true
+            }
+        }
+        
+        // Generate valid paths and points for each color
+        colors.forEach { color ->
+            var attempts = 0
+            var validPathFound = false
+            
+            while (!validPathFound && attempts < 100) {
+                attempts++
+                
+                // Try to find two random points that can be connected
+                val availablePoints = mutableListOf<Point>()
+                for (x in 0 until 5) {
+                    for (y in 0 until 5) {
+                        if (!grid[y][x]) {
+                            availablePoints.add(Point(x, y))
+                        }
+                    }
+                }
+                
+                if (availablePoints.size >= 2) {
+                    availablePoints.shuffle()
+                    
+                    // Try to find a valid path between two points
+                    for (i in availablePoints.indices) {
+                        for (j in i + 1 until availablePoints.size) {
+                            val start = availablePoints[i]
+                            val end = availablePoints[j]
+                            
+                            // Find all possible paths
+                            val possiblePaths = findPossiblePaths(start, end)
+                            
+                            // Try each path
+                            for (path in possiblePaths) {
+                                if (isPathValid(path)) {
+                                    // Found a valid path
+                                    points.add(start to color)
+                                    points.add(end to color)
+                                    markPath(path)
+                                    validPathFound = true
+                                    break
+                                }
+                            }
+                            if (validPathFound) break
+                        }
+                        if (validPathFound) break
+                    }
+                }
+            }
+        }
+        
+        points.shuffle() // Shuffle final points to randomize the order
+        points
     }
-} 
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = if (gameWon) "Congratulations! You won!" else "Flow Free",
+            fontSize = 24.sp,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Canvas(
+            modifier = Modifier
+                .size(300.dp)
+                .background(Color.White)
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            val gridX = (offset.x / (size.width / 5f)).toInt()
+                            val gridY = (offset.y / (size.height / 5f)).toInt()
+                            
+                            // Check if we're within the game field
+                            if (gridX in 0..4 && gridY in 0..4) {
+                                val point = Point(gridX, gridY)
+                                
+                                // Find if we're starting from a colored point
+                                coloredPoints.find { it.first == point }?.let { (start, color) ->
+                                    // Check if this color already has a completed flow
+                                    if (flows.none { it.color == color }) {
+                                        startPoint = start
+                                        currentFlow = Flow(color, Path().apply {
+                                            moveTo(
+                                                (start.x * size.width / 5f) + size.width / 10f,
+                                                (start.y * size.height / 5f) + size.height / 10f
+                                            )
+                                        }, listOf(start))
+                                    }
+                                }
+                            }
+                        },
+                        onDrag = { change, _ ->
+                            val gridX = (change.position.x / (size.width / 5f)).toInt()
+                            val gridY = (change.position.y / (size.height / 5f)).toInt()
+                            
+                            // Check if we're within the game field
+                            if (gridX in 0..4 && gridY in 0..4) {
+                                val point = Point(gridX, gridY)
+                                
+                                if (currentFlow != null && point != currentFlow!!.points.last()) {
+                                    // Check if we're crossing any existing flow
+                                    val isCrossing = flows.any { flow ->
+                                        flow.points.any { it == point }
+                                    }
+                                    
+                                    if (!isCrossing) {
+                                        // Check if we're backtracking along our own path
+                                        val existingPointIndex = currentFlow!!.points.indexOf(point)
+                                        if (existingPointIndex != -1) {
+                                            // We're backtracking - erase everything after this point
+                                            val newPath = Path().apply {
+                                                val points = currentFlow!!.points.take(existingPointIndex + 1)
+                                                if (points.isNotEmpty()) {
+                                                    moveTo(
+                                                        (points.first().x * size.width / 5f) + size.width / 10f,
+                                                        (points.first().y * size.height / 5f) + size.height / 10f
+                                                    )
+                                                    points.drop(1).forEach { p ->
+                                                        lineTo(
+                                                            (p.x * size.width / 5f) + size.width / 10f,
+                                                            (p.y * size.height / 5f) + size.height / 10f
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            currentFlow = currentFlow!!.copy(
+                                                path = newPath,
+                                                points = currentFlow!!.points.take(existingPointIndex + 1)
+                                            )
+                                        } else {
+                                            // Normal path extension
+                                            currentFlow = currentFlow!!.copy(
+                                                path = currentFlow!!.path.apply {
+                                                    lineTo(
+                                                        (point.x * size.width / 5f) + size.width / 10f,
+                                                        (point.y * size.height / 5f) + size.height / 10f
+                                                    )
+                                                },
+                                                points = currentFlow!!.points + point
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        onDragEnd = {
+                            if (currentFlow != null) {
+                                // Check if we ended at a matching colored point
+                                val endPoint = currentFlow!!.points.last()
+                                coloredPoints.find { it.first == endPoint && it.second == currentFlow!!.color }?.let {
+                                    // Valid flow completed
+                                    flows = flows + currentFlow!!
+                                    
+                                    // Check if game is won
+                                    if (flows.size == coloredPoints.size / 2) {
+                                        gameWon = true
+                                    }
+                                }
+                            }
+                            currentFlow = null
+                            startPoint = null
+                        }
+                    )
+                }
+        ) {
+            // Draw grid
+            for (i in 0..5) {
+                drawLine(
+                    color = Color.Gray,
+                    start = Offset(i * size.width / 5f, 0f),
+                    end = Offset(i * size.width / 5f, size.height),
+                    strokeWidth = 3f
+                )
+                drawLine(
+                    color = Color.Gray,
+                    start = Offset(0f, i * size.height / 5f),
+                    end = Offset(size.width, i * size.height / 5f),
+                    strokeWidth = 3f
+                )
+            }
+
+            // Draw colored points
+            coloredPoints.forEach { (point, color) ->
+                drawCircle(
+                    color = color,
+                    radius = 15f,
+                    center = Offset(
+                        (point.x * size.width / 5f) + size.width / 10f,
+                        (point.y * size.height / 5f) + size.height / 10f
+                    )
+                )
+            }
+
+            // Draw completed flows
+            flows.forEach { flow ->
+                drawPath(
+                    path = flow.path,
+                    color = flow.color,
+                    style = Stroke(width = 25f)
+                )
+            }
+
+            // Draw current flow
+            currentFlow?.let { flow ->
+                drawPath(
+                    path = flow.path,
+                    color = flow.color,
+                    style = Stroke(width = 25f)
+                )
+            }
+        }
+    }
+}
