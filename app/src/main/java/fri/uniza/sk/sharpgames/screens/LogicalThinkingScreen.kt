@@ -4,7 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +16,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import fri.uniza.sk.sharpgames.ui.components.GameTopBar
 
 data class Point(val x: Int, val y: Int)
 data class Flow(val color: Color, val path: Path, val points: List<Point>)
@@ -153,165 +154,178 @@ fun LogicalThinkingScreen(navController: NavController) {
         points
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = if (gameWon) "Congratulations! You won!" else "Flow Free",
-            fontSize = 24.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        Canvas(
+    Scaffold(
+        topBar = {
+            GameTopBar(
+                title = "Flow Free",
+                navController = navController
+            )
+        }
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .size(300.dp)
-                .background(Color.White)
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = { offset ->
-                            val gridX = (offset.x / (size.width / 5f)).toInt()
-                            val gridY = (offset.y / (size.height / 5f)).toInt()
-                            
-                            // Check if we're within the game field
-                            if (gridX in 0..4 && gridY in 0..4) {
-                                val point = Point(gridX, gridY)
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = if (gameWon) "Congratulations! You won!" else "Flow Free",
+                fontSize = 24.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Canvas(
+                modifier = Modifier
+                    .size(300.dp)
+                    .background(Color.White)
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragStart = { offset ->
+                                val gridX = (offset.x / (size.width / 5f)).toInt()
+                                val gridY = (offset.y / (size.height / 5f)).toInt()
                                 
-                                // Find if we're starting from a colored point
-                                coloredPoints.find { it.first == point }?.let { (start, color) ->
-                                    // Check if this color already has a completed flow
-                                    if (flows.none { it.color == color }) {
-                                        startPoint = start
-                                        currentFlow = Flow(color, Path().apply {
-                                            moveTo(
-                                                (start.x * size.width / 5f) + size.width / 10f,
-                                                (start.y * size.height / 5f) + size.height / 10f
-                                            )
-                                        }, listOf(start))
-                                    }
-                                }
-                            }
-                        },
-                        onDrag = { change, _ ->
-                            val gridX = (change.position.x / (size.width / 5f)).toInt()
-                            val gridY = (change.position.y / (size.height / 5f)).toInt()
-                            
-                            // Check if we're within the game field
-                            if (gridX in 0..4 && gridY in 0..4) {
-                                val point = Point(gridX, gridY)
-                                
-                                if (currentFlow != null && point != currentFlow!!.points.last()) {
-                                    // Check if we're crossing any existing flow
-                                    val isCrossing = flows.any { flow ->
-                                        flow.points.any { it == point }
-                                    }
+                                // Check if we're within the game field
+                                if (gridX in 0..4 && gridY in 0..4) {
+                                    val point = Point(gridX, gridY)
                                     
-                                    if (!isCrossing) {
-                                        // Check if we're backtracking along our own path
-                                        val existingPointIndex = currentFlow!!.points.indexOf(point)
-                                        if (existingPointIndex != -1) {
-                                            // We're backtracking - erase everything after this point
-                                            val newPath = Path().apply {
-                                                val points = currentFlow!!.points.take(existingPointIndex + 1)
-                                                if (points.isNotEmpty()) {
-                                                    moveTo(
-                                                        (points.first().x * size.width / 5f) + size.width / 10f,
-                                                        (points.first().y * size.height / 5f) + size.height / 10f
-                                                    )
-                                                    points.drop(1).forEach { p ->
-                                                        lineTo(
-                                                            (p.x * size.width / 5f) + size.width / 10f,
-                                                            (p.y * size.height / 5f) + size.height / 10f
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                            currentFlow = currentFlow!!.copy(
-                                                path = newPath,
-                                                points = currentFlow!!.points.take(existingPointIndex + 1)
-                                            )
-                                        } else {
-                                            // Normal path extension
-                                            currentFlow = currentFlow!!.copy(
-                                                path = currentFlow!!.path.apply {
-                                                    lineTo(
-                                                        (point.x * size.width / 5f) + size.width / 10f,
-                                                        (point.y * size.height / 5f) + size.height / 10f
-                                                    )
-                                                },
-                                                points = currentFlow!!.points + point
-                                            )
+                                    // Find if we're starting from a colored point
+                                    coloredPoints.find { it.first == point }?.let { (start, color) ->
+                                        // Check if this color already has a completed flow
+                                        if (flows.none { it.color == color }) {
+                                            startPoint = start
+                                            currentFlow = Flow(color, Path().apply {
+                                                moveTo(
+                                                    (start.x * size.width / 5f) + size.width / 10f,
+                                                    (start.y * size.height / 5f) + size.height / 10f
+                                                )
+                                            }, listOf(start))
                                         }
                                     }
                                 }
-                            }
-                        },
-                        onDragEnd = {
-                            if (currentFlow != null) {
-                                // Check if we ended at a matching colored point
-                                val endPoint = currentFlow!!.points.last()
-                                coloredPoints.find { it.first == endPoint && it.second == currentFlow!!.color }?.let {
-                                    // Valid flow completed
-                                    flows = flows + currentFlow!!
-                                    
-                                    // Check if game is won
-                                    if (flows.size == coloredPoints.size / 2) {
-                                        gameWon = true
+                            },
+                            onDrag = { change, _ ->
+                                val gridX = (change.position.x / (size.width / 5f)).toInt()
+                                val gridY = (change.position.y / (size.height / 5f)).toInt()
+                                
+                                // Check if we're within the game field
+                                if (gridX in 0..4 && gridY in 0..4) {
+                                    val point = Point(gridX, gridY)
+
+                                    // Check if flow isn't null and if we aren't staying on the same place which was already added
+                                    if (currentFlow != null && point != currentFlow!!.points.last()) {
+                                        // Check if we're crossing any existing flow
+                                        val isCrossing = flows.any { flow ->
+                                            flow.points.any { it == point }
+                                        }
+                                        
+                                        if (!isCrossing) {
+                                            // Check if we're backtracking along our own path
+                                            val existingPointIndex = currentFlow!!.points.indexOf(point)
+                                            if (existingPointIndex != -1) {
+                                                // We're backtracking - erase everything after this point
+                                                val newPath = Path().apply {
+                                                    // Take first n+1 points
+                                                    val points = currentFlow!!.points.take(existingPointIndex + 1)
+                                                    if (points.isNotEmpty()) {
+                                                        moveTo(
+                                                            (points.first().x * size.width / 5f) + size.width / 10f,
+                                                            (points.first().y * size.height / 5f) + size.height / 10f
+                                                        )
+                                                        // Write line to each point
+                                                        points.drop(1).forEach { p ->
+                                                            lineTo(
+                                                                (p.x * size.width / 5f) + size.width / 10f,
+                                                                (p.y * size.height / 5f) + size.height / 10f
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                currentFlow = currentFlow!!.copy(
+                                                    path = newPath,
+                                                    points = currentFlow!!.points.take(existingPointIndex + 1)
+                                                )
+                                            } else {
+                                                // Normal path extension
+                                                currentFlow = currentFlow!!.copy(
+                                                    path = currentFlow!!.path.apply {
+                                                        lineTo(
+                                                            (point.x * size.width / 5f) + size.width / 10f,
+                                                            (point.y * size.height / 5f) + size.height / 10f
+                                                        )
+                                                    },
+                                                    points = currentFlow!!.points + point
+                                                )
+                                            }
+                                        }
                                     }
                                 }
+                            },
+                            onDragEnd = {
+                                if (currentFlow != null) {
+                                    // Check if we ended at a matching colored point
+                                    val endPoint = currentFlow!!.points.last()
+                                    coloredPoints.find { it.first == endPoint && it.second == currentFlow!!.color }?.let {
+                                        // Valid flow completed
+                                        flows = flows + currentFlow!!
+                                        
+                                        // Check if game is won
+                                        if (flows.size == coloredPoints.size / 2) {
+                                            gameWon = true
+                                        }
+                                    }
+                                }
+                                currentFlow = null
+                                startPoint = null
                             }
-                            currentFlow = null
-                            startPoint = null
-                        }
+                        )
+                    }
+            ) {
+                // Draw grid
+                for (i in 0..5) {
+                    drawLine(
+                        color = Color.Gray,
+                        start = Offset(i * size.width / 5f, 0f),
+                        end = Offset(i * size.width / 5f, size.height),
+                        strokeWidth = 3f
+                    )
+                    drawLine(
+                        color = Color.Gray,
+                        start = Offset(0f, i * size.height / 5f),
+                        end = Offset(size.width, i * size.height / 5f),
+                        strokeWidth = 3f
                     )
                 }
-        ) {
-            // Draw grid
-            for (i in 0..5) {
-                drawLine(
-                    color = Color.Gray,
-                    start = Offset(i * size.width / 5f, 0f),
-                    end = Offset(i * size.width / 5f, size.height),
-                    strokeWidth = 3f
-                )
-                drawLine(
-                    color = Color.Gray,
-                    start = Offset(0f, i * size.height / 5f),
-                    end = Offset(size.width, i * size.height / 5f),
-                    strokeWidth = 3f
-                )
-            }
 
-            // Draw colored points
-            coloredPoints.forEach { (point, color) ->
-                drawCircle(
-                    color = color,
-                    radius = 15f,
-                    center = Offset(
-                        (point.x * size.width / 5f) + size.width / 10f,
-                        (point.y * size.height / 5f) + size.height / 10f
+                // Draw colored points
+                coloredPoints.forEach { (point, color) ->
+                    drawCircle(
+                        color = color,
+                        radius = 20f,
+                        center = Offset(
+                            (point.x * size.width / 5f) + size.width / 10f,
+                            (point.y * size.height / 5f) + size.height / 10f
+                        )
                     )
-                )
-            }
+                }
 
-            // Draw completed flows
-            flows.forEach { flow ->
-                drawPath(
-                    path = flow.path,
-                    color = flow.color,
-                    style = Stroke(width = 25f)
-                )
-            }
+                // Draw completed flows
+                flows.forEach { flow ->
+                    drawPath(
+                        path = flow.path,
+                        color = flow.color,
+                        style = Stroke(width = 25f)
+                    )
+                }
 
-            // Draw current flow
-            currentFlow?.let { flow ->
-                drawPath(
-                    path = flow.path,
-                    color = flow.color,
-                    style = Stroke(width = 25f)
-                )
+                // Draw current flow
+                currentFlow?.let { flow ->
+                    drawPath(
+                        path = flow.path,
+                        color = flow.color,
+                        style = Stroke(width = 25f)
+                    )
+                }
             }
         }
     }
