@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -157,7 +158,7 @@ fun LogicalThinkingScreen(navController: NavController) {
     Scaffold(
         topBar = {
             GameTopBar(
-                title = "Flow Free",
+                title = "Logical Thinking",
                 navController = navController
             )
         }
@@ -167,7 +168,8 @@ fun LogicalThinkingScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = if (gameWon) "Congratulations! You won!" else "Flow Free",
@@ -326,6 +328,29 @@ fun LogicalThinkingScreen(navController: NavController) {
                         style = Stroke(width = 25f)
                     )
                 }
+            }
+
+            Button(
+                onClick = {
+                    // Reset game state
+                    flows = listOf()
+                    currentFlow = null
+                    startPoint = null
+                    gameWon = false
+                },
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .size(width = 200.dp, height = 50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFd4d36a)
+                )
+            ) {
+                Text(
+                    text = "Reset Game",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
         }
     }
