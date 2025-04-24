@@ -29,8 +29,8 @@ fun LogicalThinkingScreen(navController: NavController) {
     var startPoint by remember { mutableStateOf<Point?>(null) }
     var gameWon by remember { mutableStateOf(false) }
     
-    // Generate random colored points with guaranteed valid paths
-    val coloredPoints = remember {
+    // Function to generate new points
+    fun generateNewPoints(): List<Pair<Point, Color>> {
         val colors = listOf(Color.Red, Color.Blue, Color.Green, Color.Yellow, Color.Magenta)
         val points = mutableListOf<Pair<Point, Color>>()
         val grid = Array(5) { Array(5) { false } } // false means cell is empty
@@ -152,9 +152,12 @@ fun LogicalThinkingScreen(navController: NavController) {
         }
         
         points.shuffle() // Shuffle final points to randomize the order
-        points
+        return points
     }
-
+    
+    // State for points that can be regenerated
+    var coloredPoints by remember { mutableStateOf(generateNewPoints()) }
+    
     Scaffold(
         topBar = {
             GameTopBar(
@@ -332,11 +335,12 @@ fun LogicalThinkingScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    // Reset game state
+                    // Reset game state and generate new points
                     flows = listOf()
                     currentFlow = null
                     startPoint = null
                     gameWon = false
+                    coloredPoints = generateNewPoints()
                 },
                 modifier = Modifier
                     .padding(bottom = 16.dp)
