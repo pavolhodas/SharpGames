@@ -153,19 +153,77 @@ fun ReactionsScreen(navController: NavController) {
 
             // Results display
             Column(
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (gameState == GameState.FINISHED) {
-                    Text(
-                        text = "Reaction time: ${reactionTime}ms",
-                        fontSize = 20.sp
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFf5f5f5)
                     )
-                    Text(
-                        text = "Best time: ${if (bestTime == Long.MAX_VALUE) "N/A" else "${bestTime}ms"}",
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = if (gameState == GameState.ACTIVE) "Current Reaction Time" else "Your Reaction Time",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF5c9464)
+                        )
+                        Text(
+                            text = if (gameState == GameState.ACTIVE) "Waiting..." else "${reactionTime}ms",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                        if (gameState == GameState.FINISHED && reactionTime < bestTime) {
+                            Text(
+                                text = "New Best Time! 🎉",
+                                fontSize = 18.sp,
+                                color = Color(0xFF4CAF50),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFf5f5f5)
                     )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Best Time",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF5c9464)
+                        )
+                        Text(
+                            text = if (bestTime == Long.MAX_VALUE) "N/A" else "${bestTime}ms",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
                 }
             }
 
