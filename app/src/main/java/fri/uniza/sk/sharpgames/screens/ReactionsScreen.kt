@@ -16,6 +16,5 @@ fun ReactionsScreen(navController: NavController) {
             navController = navController
         )
         
-        // Tu bude obsah hry
     }
 } 

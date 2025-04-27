@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import fri.uniza.sk.sharpgames.ui.components.GameTopBar
+import kotlinx.coroutines.delay
 
 data class Point(val x: Int, val y: Int)
 data class Flow(val color: Color, val path: Path, val points: List<Point>)
@@ -335,12 +336,9 @@ fun LogicalThinkingScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    // Reset game state and generate new points
-                    flows = listOf()
-                    currentFlow = null
-                    startPoint = null
-                    gameWon = false
-                    coloredPoints = generateNewPoints()
+                  navController.navigate("menu") {
+                    popUpTo("menu") { inclusive = true }
+                  }
                 },
                 modifier = Modifier
                     .padding(bottom = 16.dp)
@@ -350,7 +348,7 @@ fun LogicalThinkingScreen(navController: NavController) {
                 )
             ) {
                 Text(
-                    text = "Reset Game",
+                    text = "Go back Home",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -358,4 +356,15 @@ fun LogicalThinkingScreen(navController: NavController) {
             }
         }
     }
+
+  LaunchedEffect(key1 = gameWon) {
+    if(gameWon) {
+      delay(1500)
+      flows = listOf()
+      currentFlow = null
+      startPoint = null
+      gameWon = false
+      coloredPoints = generateNewPoints()
+    }
+  }
 }
