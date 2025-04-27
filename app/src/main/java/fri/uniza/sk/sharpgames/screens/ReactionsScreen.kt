@@ -25,7 +25,8 @@ fun ReactionsScreen(navController: NavController) {
     var reactionTime by remember { mutableStateOf(0L) }
     var startTime by remember { mutableStateOf(0L) }
     var circleVisible by remember { mutableStateOf(false) }
-    var shouldStartNewRound by remember { mutableStateOf(false) }
+    var currentRound by remember { mutableStateOf(1) }
+    var bestTime by remember { mutableStateOf(Long.MAX_VALUE) }
     var currentColor by remember { mutableStateOf(Color.Green) }
     
     // List of possible colors
@@ -47,22 +48,21 @@ fun ReactionsScreen(navController: NavController) {
 
     // Handle waiting state and circle appearance
     LaunchedEffect(gameState) {
-        if (gameState == GameState.WAITING) {
-            delay(Random.nextLong(1000, 3000))
-            if (gameState == GameState.WAITING) {
-                gameState = GameState.ACTIVE
-                circleVisible = true
-                startTime = System.currentTimeMillis()
+        when (gameState) {
+            GameState.WAITING -> {
+                delay(Random.nextLong(1000, 3000))
+                if (gameState == GameState.WAITING) {
+                    gameState = GameState.ACTIVE
+                    circleVisible = true
+                    startTime = System.currentTimeMillis()
+                }
             }
-        }
-    }
-
-    // Handle new round after delay
-    LaunchedEffect(shouldStartNewRound) {
-        if (shouldStartNewRound) {
-            delay(1000)
-            startNewRound()
-            shouldStartNewRound = false
+            GameState.FINISHED -> {
+                delay(1000)
+                currentRound++
+                startNewRound()
+            }
+            else -> {}
         }
     }
 
@@ -87,13 +87,24 @@ fun ReactionsScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Score display
-            Text(
-                text = "Score: $score",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            // Game info
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Score: $score",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Round: $currentRound",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             // Game area
             Box(
@@ -110,9 +121,11 @@ fun ReactionsScreen(navController: NavController) {
                             if (gameState == GameState.ACTIVE && circleVisible) {
                                 reactionTime = System.currentTimeMillis() - startTime
                                 score += (1000 - reactionTime).coerceAtLeast(0).toInt()
+                                if (reactionTime < bestTime) {
+                                    bestTime = reactionTime
+                                }
                                 gameState = GameState.FINISHED
                                 circleVisible = false
-                                shouldStartNewRound = true
                             }
                         }
                 ) {
@@ -127,13 +140,22 @@ fun ReactionsScreen(navController: NavController) {
                 }
             }
 
-            // Reaction time display
-            if (gameState == GameState.FINISHED) {
-                Text(
-                    text = "Reaction time: ${reactionTime}ms",
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
+            // Results display
+            Column(
+                modifier = Modifier.padding(top = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (gameState == GameState.FINISHED) {
+                    Text(
+                        text = "Reaction time: ${reactionTime}ms",
+                        fontSize = 20.sp
+                    )
+                    Text(
+                        text = "Best time: ${if (bestTime == Long.MAX_VALUE) "N/A" else "${bestTime}ms"}",
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
     }
