@@ -26,11 +26,23 @@ fun ReactionsScreen(navController: NavController) {
     var startTime by remember { mutableStateOf(0L) }
     var circleVisible by remember { mutableStateOf(false) }
     var shouldStartNewRound by remember { mutableStateOf(false) }
+    var currentColor by remember { mutableStateOf(Color.Green) }
+    
+    // List of possible colors
+    val colors = listOf(
+        Color.Green,
+        Color.Red,
+        Color.Blue,
+        Color.Yellow,
+        Color.Magenta,
+        Color.Cyan
+    )
 
     // Function to start a new round
     fun startNewRound() {
         gameState = GameState.WAITING
         circleVisible = false
+        currentColor = colors.random()
     }
 
     // Handle waiting state and circle appearance
@@ -107,7 +119,7 @@ fun ReactionsScreen(navController: NavController) {
                     if (circleVisible) {
                         // Draw the target circle
                         drawCircle(
-                            color = Color.Green,
+                            color = currentColor,
                             radius = 50f,
                             center = Offset(size.width / 2, size.height / 2)
                         )
