@@ -168,6 +168,28 @@ fun ReactionsScreen(navController: NavController) {
                     )
                 }
             }
+
+            // Home button
+            Button(
+                onClick = { 
+                    navController.navigate("menu") {
+                        popUpTo("menu") { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .size(width = 200.dp, height = 50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF5c9464)
+                )
+            ) {
+                Text(
+                    text = "Back to Menu",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+                )
+            }
         }
     }
 }
