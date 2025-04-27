@@ -1,14 +1,12 @@
 package fri.uniza.sk.sharpgames.screens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -112,13 +110,13 @@ fun ReactionsScreen(navController: NavController) {
                     .fillMaxWidth()
                     .weight(1f)
                     .background(Color.LightGray)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable {
-                            if (gameState == GameState.ACTIVE && circleVisible) {
+                if (circleVisible) {
+                    Button(
+                        onClick = {
+                            if (gameState == GameState.ACTIVE) {
                                 reactionTime = System.currentTimeMillis() - startTime
                                 score += (1000 - reactionTime).coerceAtLeast(0).toInt()
                                 if (reactionTime < bestTime) {
@@ -127,16 +125,13 @@ fun ReactionsScreen(navController: NavController) {
                                 gameState = GameState.FINISHED
                                 circleVisible = false
                             }
-                        }
-                ) {
-                    if (circleVisible) {
-                        // Draw the target circle
-                        drawCircle(
-                            color = currentColor,
-                            radius = 50f,
-                            center = Offset(size.width / 2, size.height / 2)
-                        )
-                    }
+                        },
+                        modifier = Modifier.size(100.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = currentColor
+                        ),
+                        shape = CircleShape
+                    ) {}
                 }
             }
 
