@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ fun ReactionsScreen(navController: NavController) {
     var currentRound by remember { mutableStateOf(1) }
     var bestTime by remember { mutableStateOf(Long.MAX_VALUE) }
     var currentColor by remember { mutableStateOf(Color.Green) }
+    var circlePosition by remember { mutableStateOf(Offset(0f, 0f)) }
     
     // List of possible colors
     val colors = listOf(
@@ -36,6 +38,14 @@ fun ReactionsScreen(navController: NavController) {
         Color.Magenta,
         Color.Cyan
     )
+
+    // Function to generate random position within the game area
+    fun generateRandomPosition(boxWidth: Float, boxHeight: Float): Offset {
+        val padding = 50f // Keep some padding from edges
+        val x = Random.nextFloat() * (boxWidth - 100f) + padding
+        val y = Random.nextFloat() * (boxHeight - 100f) + padding
+        return Offset(x, y)
+    }
 
     // Function to start a new round
     fun startNewRound() {
@@ -53,6 +63,8 @@ fun ReactionsScreen(navController: NavController) {
                     gameState = GameState.ACTIVE
                     circleVisible = true
                     startTime = System.currentTimeMillis()
+                    // Update circle position when it becomes visible
+                    circlePosition = generateRandomPosition(400f, 400f) // Adjust these values based on your game area size
                 }
             }
             GameState.FINISHED -> {
@@ -110,8 +122,7 @@ fun ReactionsScreen(navController: NavController) {
                     .fillMaxWidth()
                     .weight(1f)
                     .background(Color.LightGray)
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+                    .padding(16.dp)
             ) {
                 if (circleVisible) {
                     Button(
@@ -126,7 +137,12 @@ fun ReactionsScreen(navController: NavController) {
                                 circleVisible = false
                             }
                         },
-                        modifier = Modifier.size(100.dp),
+                        modifier = Modifier
+                            .size(100.dp)
+                            .offset(
+                                x = circlePosition.x.dp,
+                                y = circlePosition.y.dp
+                            ),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = currentColor
                         ),
