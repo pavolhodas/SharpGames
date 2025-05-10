@@ -41,9 +41,10 @@ fun ReactionsScreen(navController: NavController) {
 
     // Function to generate random position within the game area
     fun generateRandomPosition(boxWidth: Float, boxHeight: Float): Offset {
-        val padding = 50f // Keep some padding from edges
-        val x = Random.nextFloat() * (boxWidth - 100f) + padding
-        val y = Random.nextFloat() * (boxHeight - 100f) + padding
+        val circleSize = 100f // Size of the circle in dp
+        val padding = circleSize / 2 // Half of the circle size to ensure it's fully visible
+        val x = Random.nextFloat() * (boxWidth - circleSize) + padding
+        val y = Random.nextFloat() * (boxHeight - circleSize) + padding
         return Offset(x, y)
     }
 
