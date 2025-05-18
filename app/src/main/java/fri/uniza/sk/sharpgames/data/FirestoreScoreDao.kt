@@ -5,6 +5,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
+//inspiracia celej firebase implementacie z youtube:
+//https://www.youtube.com/playlist?list=PLIIWAqaTrNlg7q0cfajkBj8OwG60qpBVL
 class FirestoreScoreDao : ScoreDao {
   private val db = FirebaseFirestore.getInstance()
   private val scoreCollection = db.collection("score")

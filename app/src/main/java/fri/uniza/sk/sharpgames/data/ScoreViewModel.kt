@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+
+//inspiracia celej firebase implementacie z youtube:
+//https://www.youtube.com/playlist?list=PLIIWAqaTrNlg7q0cfajkBj8OwG60qpBVL
 class ScoreViewModel(private val repository: ScoreRepository) : ViewModel() {
   // Using Compose's State<T> instead of LiveData
   private val _uiState = MutableStateFlow<ScoreUiState>(ScoreUiState.Empty)
