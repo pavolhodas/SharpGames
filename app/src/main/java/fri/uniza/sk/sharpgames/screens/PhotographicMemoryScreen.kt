@@ -21,6 +21,8 @@ import fri.uniza.sk.sharpgames.game.GameState
 import fri.uniza.sk.sharpgames.ui.components.GameTopBar
 import kotlinx.coroutines.delay
 import fri.uniza.sk.sharpgames.ui.theme.RedPhotographicSc
+import fri.uniza.sk.sharpgames.data.ScoreViewModel
+import fri.uniza.sk.sharpgames.data.ScoreViewModelFactory
 
 // Stav hry
 data class PhotographicMemoryState(
@@ -34,7 +36,12 @@ data class PhotographicMemoryState(
 )
 
 @Composable
-fun PhotographicMemoryScreen(navController: NavController) {
+fun PhotographicMemoryScreen(
+    navController: NavController,
+    viewModel: ScoreViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = ScoreViewModelFactory()
+    )
+) {
     // mutableStateOf- automaticke prekreslovanie pri zmene stavu
     // remember zabrani resetovaniu stavu pri rekompozicii(otocenie obrazovky atd..)
     var gameState by remember { mutableStateOf(GameState.INITIAL) }
@@ -184,6 +191,10 @@ fun PhotographicMemoryScreen(navController: NavController) {
           if (gameState != GameState.INITIAL) {
             Button(
                 onClick = {
+                    // Save score before navigating
+                    if (score > 0) {
+                        viewModel.addScore("Photographic Memory", score)
+                    }
                     navController.navigate("menu") {
                         popUpTo("menu") { inclusive = true }
                     }
