@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 class ScoreViewModel(private val repository: ScoreRepository) : ViewModel() {
   // Using Compose's State<T> instead of LiveData
   private val _uiState = MutableStateFlow<ScoreUiState>(ScoreUiState.Empty)
-  val uiState: StateFlow<ScoreUiState> = _uiState.asStateFlow()
 
   fun addScore(gameName: String, gameScore: Int) {
     viewModelScope.launch {
@@ -25,10 +24,23 @@ class ScoreViewModel(private val repository: ScoreRepository) : ViewModel() {
     }
   }
 
+  suspend fun getHighestScore(gameName: String): Int {
+    _uiState.value = ScoreUiState.Loading
+    return try {
+      val result = repository.getHighestScore(gameName)
+      _uiState.value = ScoreUiState.Success("Highest score retrieved")
+      result
+    } catch (e: Exception) {
+      _uiState.value = ScoreUiState.Error(e.message ?: "Unknown error")
+      0
+    }
+  }
+
+
   sealed class ScoreUiState {
     object Empty : ScoreUiState()
     object Loading : ScoreUiState()
-    data class Success(val documentId: String) : ScoreUiState()
+    data class Success(val message: String) : ScoreUiState()
     data class Error(val message: String) : ScoreUiState()
   }
 }

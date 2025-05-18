@@ -54,7 +54,12 @@ fun PhotographicMemoryScreen(
     var currentPatternIndex by remember { mutableStateOf(0) }
     var startNextRound by remember { mutableStateOf(false)}
     var textMessage by remember {mutableStateOf("")}
-
+    var highestScore by remember { mutableStateOf(0) }
+    
+    // Load highest score in korutine
+    LaunchedEffect(Unit) {
+      highestScore = viewModel.getHighestScore("Photographic Memory")
+    }
 
 // Handle showing pattern cells one by one
   LaunchedEffect(key1 = gameState, key2 = currentPatternIndex) {
@@ -116,6 +121,7 @@ fun PhotographicMemoryScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Score: ${score}")
+                Text("Top score: ${highestScore}")
                 Text("Level: ${level}")
             }
 
