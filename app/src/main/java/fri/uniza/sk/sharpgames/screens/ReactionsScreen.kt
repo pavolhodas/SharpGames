@@ -9,7 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -19,6 +21,14 @@ import kotlin.random.Random
 
 @Composable
 fun ReactionsScreen(navController: NavController) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp
+    
+    // Calculate dynamic sizes based on screen width
+    val circleSize = (screenWidth * 0.2f).coerceAtMost(80f)
+    val fontSize = (screenWidth * 0.05f).coerceAtMost(24f)
+    val smallFontSize = (screenWidth * 0.04f).coerceAtMost(18f)
+    
     var gameState by remember { mutableStateOf(GameState.WAITING) }
     var score by remember { mutableStateOf(0) }
     var reactionTime by remember { mutableStateOf(0L) }
@@ -29,7 +39,6 @@ fun ReactionsScreen(navController: NavController) {
     var currentColor by remember { mutableStateOf(Color.Green) }
     var circlePosition by remember { mutableStateOf(Offset(0f, 0f)) }
     
-    // List of possible colors
     val colors = listOf(
         Color.Green,
         Color.Red,
@@ -39,23 +48,19 @@ fun ReactionsScreen(navController: NavController) {
         Color.Cyan
     )
 
-    // Function to generate random position within the game area
     fun generateRandomPosition(boxWidth: Float, boxHeight: Float): Offset {
-        val circleSize = 100f // Size of the circle in dp
-        val padding = circleSize / 2 // Half of the circle size to ensure it's fully visible
+        val padding = circleSize / 2
         val x = Random.nextFloat() * (boxWidth - circleSize) + padding
         val y = Random.nextFloat() * (boxHeight - circleSize) + padding
         return Offset(x, y)
     }
 
-    // Function to start a new round
     fun startNewRound() {
         gameState = GameState.WAITING
         circleVisible = false
         currentColor = colors.random()
     }
 
-    // Handle waiting state and circle appearance
     LaunchedEffect(gameState) {
         when (gameState) {
             GameState.WAITING -> {
@@ -64,8 +69,8 @@ fun ReactionsScreen(navController: NavController) {
                     gameState = GameState.ACTIVE
                     circleVisible = true
                     startTime = System.currentTimeMillis()
-                    // Update circle position when it becomes visible
-                    circlePosition = generateRandomPosition(400f, 400f) // Adjust these values based on your game area size
+                    // Use fixed dimensions for now, we'll update this when we have the actual box size
+                    circlePosition = generateRandomPosition(300f, 300f)
                 }
             }
             GameState.FINISHED -> {
@@ -77,7 +82,6 @@ fun ReactionsScreen(navController: NavController) {
         }
     }
 
-    // Start the first round when the screen is created
     LaunchedEffect(Unit) {
         startNewRound()
     }
@@ -94,7 +98,7 @@ fun ReactionsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -102,18 +106,22 @@ fun ReactionsScreen(navController: NavController) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "Score: $score",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = fontSize.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.weight(1f)
                 )
                 Text(
                     text = "Round: $currentRound",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = fontSize.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
@@ -123,7 +131,7 @@ fun ReactionsScreen(navController: NavController) {
                     .fillMaxWidth()
                     .weight(1f)
                     .background(Color.LightGray)
-                    .padding(16.dp)
+                    .padding(8.dp)
             ) {
                 if (circleVisible) {
                     Button(
@@ -139,7 +147,7 @@ fun ReactionsScreen(navController: NavController) {
                             }
                         },
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(circleSize.dp)
                             .offset(
                                 x = circlePosition.x.dp,
                                 y = circlePosition.y.dp
@@ -155,43 +163,43 @@ fun ReactionsScreen(navController: NavController) {
             // Results display
             Column(
                 modifier = Modifier
-                    .padding(top = 16.dp)
+                    .padding(top = 8.dp)
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 4.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color(0xFFf5f5f5)
                     )
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(16.dp)
+                            .padding(8.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = if (gameState == GameState.ACTIVE) "Current Reaction Time" else "Your Reaction Time",
-                            fontSize = 20.sp,
+                            fontSize = smallFontSize.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF5c9464)
                         )
                         Text(
                             text = if (gameState == GameState.ACTIVE) "Waiting..." else "${reactionTime}ms",
-                            fontSize = 32.sp,
+                            fontSize = fontSize.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            modifier = Modifier.padding(vertical = 4.dp)
                         )
                         if (gameState == GameState.FINISHED && reactionTime < bestTime) {
                             Text(
                                 text = "New Best Time! 🎉",
-                                fontSize = 18.sp,
+                                fontSize = smallFontSize.sp,
                                 color = Color(0xFF4CAF50),
-                                modifier = Modifier.padding(top = 8.dp)
+                                modifier = Modifier.padding(top = 4.dp)
                             )
                         }
                     }
@@ -200,29 +208,29 @@ fun ReactionsScreen(navController: NavController) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 4.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color(0xFFf5f5f5)
                     )
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(16.dp)
+                            .padding(8.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "Best Time",
-                            fontSize = 20.sp,
+                            fontSize = smallFontSize.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF5c9464)
                         )
                         Text(
                             text = if (bestTime == Long.MAX_VALUE) "N/A" else "${bestTime}ms",
-                            fontSize = 24.sp,
+                            fontSize = fontSize.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            modifier = Modifier.padding(vertical = 4.dp)
                         )
                     }
                 }
@@ -236,15 +244,15 @@ fun ReactionsScreen(navController: NavController) {
                     }
                 },
                 modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .size(width = 200.dp, height = 50.dp),
+                    .padding(bottom = 8.dp)
+                    .size(width = (screenWidth * 0.5f).coerceAtMost(200f).dp, height = 50.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF5c9464)
                 )
             ) {
                 Text(
                     text = "Back to Menu",
-                    fontSize = 18.sp,
+                    fontSize = smallFontSize.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White
                 )

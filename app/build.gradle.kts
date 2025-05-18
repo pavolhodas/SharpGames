@@ -67,6 +67,5 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.room:room-runtime:2.6.1") // or latest
-    kapt("androidx.room:room-compiler:2.6.1")
 
 }
